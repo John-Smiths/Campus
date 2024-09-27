@@ -24,3 +24,7 @@ classroom  为对应班级例:导弹维修2408.txt
 python3 main.py
 ```
 @机器人 /help
+
+# 致谢
+https://q.qq.com/
+https://github.com/tencent-connect/botpy
