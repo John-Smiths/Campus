@@ -20,4 +20,7 @@ Argentina 为 QQ开放平台->QQ机器人管理端->AppID(机器人ID)
 classroom  为对应班级例:导弹维修2408.txt  
 
 # 使用
+```bash
+python3 main.py
+```
 @机器人 /help
