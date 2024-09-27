@@ -28,3 +28,7 @@ python3 main.py
 # 致谢
 https://q.qq.com/  
 https://github.com/tencent-connect/botpy
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=John-Smiths/QQBot-Class&type=Date)](https://star-history.com/#John-Smiths/QQBot-Class&Date)
