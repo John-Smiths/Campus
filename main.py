@@ -81,17 +81,20 @@ async def count(api: BotAPI, message: Message, params=None):
     except ValueError:
         pass
 
-    if task:
-        result = set(readname(f"name/{classroom}.txt")) - set(read_filename(f"db/{task}/"))
-        result_name = formar_names(result, 3)
-        get_number = get_len_number(f"db/{task}")
+    try:
+        if task:
+            result = set(readname(f"name/{classroom}.txt")) - set(read_filename(f"db/{task}/"))
+            result_name = formar_names(result, 3)
+            get_number = get_len_number(f"db/{task}")
 
-        if result == 0:
-            await message.reply(content=f"\n{task} 任务统计 已全部收集完毕 请到服务器后台下载.")
+            if result == 0:
+                await message.reply(content=f"\n{task} 任务统计 已全部收集完毕 请到服务器后台下载.")
+            else:
+                await message.reply(content=f"\n{task} 任务\n以下人员未交:\n{result_name}\n\n已提交 {get_number} 份.\n未交 {len(result)} 份.")
         else:
-            await message.reply(content=f"\n{task} 任务\n以下人员未交:\n{result_name}\n\n已提交 {get_number} 份.\n未交 {len(result)} 份.")
-    else:
-        await message.reply(content=f"\n 没有该任务")
+            await message.reply(content=f"\n 没有该任务")
+    except FileNotFoundError:
+            await message.reply(content=f"\n 没有该任务")
 
     return True
 
@@ -157,15 +160,18 @@ async def clears(api: BotAPI, message: Message, params=None):
     except ValueError:
         pass
 
-    if task:
-        del task_dict[task]
-        with open("task.json", "w") as fp:
-            dump(task_dict, fp, ensure_ascii=False, indent=4)
-        delete_directory(f"db/{task}")
-        
-        await message.reply(content=f"\n已清除 {task} 任务缓存")
-    else:
-        await message.reply(content=f"\n 没有该任务")
+    try:
+        if task:
+            del task_dict[task]
+            with open("task.json", "w") as fp:
+                dump(task_dict, fp, ensure_ascii=False, indent=4)
+            delete_directory(f"db/{task}")
+            
+            await message.reply(content=f"\n已清除 {task} 任务缓存")
+        else:
+            await message.reply(content=f"\n 没有该任务")
+    except KeyError:
+            await message.reply(content=f"\n 没有该任务")
     return True
 
 
