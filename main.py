@@ -14,6 +14,7 @@ from py.systeminfo import *
 from py.downimg import *
 from py.packzip import *
 from py.toolsname import *
+from py.writename import *
 
 # 以下为系统模块
 from datetime import datetime
@@ -22,7 +23,8 @@ from json import loads, dump
 from os import makedirs
 
 
-with open("conf.json", "r") as fp:
+
+with open("conf.json", "r", encoding="utf-8") as fp:
     conf=loads(fp.read())
     Argentina = conf['Argentina']
     secret = conf['secret']
@@ -58,20 +60,15 @@ def search_task(raw_dict: dict, number:int):
 async def top(api: BotAPI, message: Message, params=None):
     # 如果使用 self.api 则会无法判断是群还是私聊
     msg = message
-    print(msg)
     await message.reply(content=f"\n当前服务器负载:\n{systeminfo()}")
     return True # 如果没有返回则会触发去重 msg_seq
 
 @Commands("count")
 async def count(api: BotAPI, message: Message, params=None):
     msg = message
-    raw_message = msg.content.strip().split("/count")[1]
+    raw_message = msg.content.strip().split()
+    _, task = [i for i in raw_message if i != ""] 
 
-    try:
-        _, task = raw_message.split(" ")
-    except ValueError:
-        await message.reply(content=f"\n未成功 任务名错误")
-        return True
     with open("task.json", "r") as fp:
         task_dict = loads(fp.read())
         task_list = list(task_dict.keys())
@@ -84,12 +81,14 @@ async def count(api: BotAPI, message: Message, params=None):
     try:
         if task:
             result = set(readname(f"name/{classroom}.txt")) - set(read_filename(f"db/{task}/"))
+            result = {item for item in result if item != ''}
             result_name = formar_names(result, 3)
             get_number = get_len_number(f"db/{task}")
 
-            if result == 0:
-                await message.reply(content=f"\n{task} 任务统计 已全部收集完毕 请到服务器后台下载.")
+            if not result:
+                await message.reply(content=f"\n{task} 任务 已全部收集完毕.")
             else:
+                print(result)
                 await message.reply(content=f"\n{task} 任务\n以下人员未交:\n{result_name}\n\n已提交 {get_number} 份.\n未交 {len(result)} 份.")
         else:
             await message.reply(content=f"\n 没有该任务")
@@ -102,21 +101,26 @@ async def count(api: BotAPI, message: Message, params=None):
 @Commands("newtask")
 async def newtask(api: BotAPI, message: Message, params=None):
     msg = message
-    new_task = msg.content.split("/newtask")[1].strip()
+    new_task = msg.content.split("newtask")[-1].strip()
 
-    with open("task.json", "r") as fp:
-        task_dict = loads(fp.read())
-        task_list = list(task_dict.keys())
-        if not istrue(task_list, new_task):
-            # task_dict[new_task] = len(task_list)+1
-            ID = add_task(task_dict, new_task)
-            with open("task.json", "w") as fp:
-                dump(task_dict, fp, ensure_ascii=False, indent=4)
-            create_directory(f"db/{new_task}")
-            await message.reply(content=f"\n已添加 {new_task} 任务ID:{ID}")
-        else:
-            await message.reply(content=f"\n已存在此任务,请完成后或删除后再次添加.")
-    return True
+    if len(new_task) > 0:
+
+        with open("task.json", "r") as fp:
+            task_dict = loads(fp.read())
+            task_list = list(task_dict.keys())
+            if not istrue(task_list, new_task):
+                # task_dict[new_task] = len(task_list)+1
+                ID = add_task(task_dict, new_task)
+                with open("task.json", "w") as fp:
+                    dump(task_dict, fp, ensure_ascii=False, indent=4)
+                create_directory(f"db/{new_task}")
+                await message.reply(content=f"\n已添加 {new_task} 任务ID:{ID}")
+            else:
+                await message.reply(content=f"\n已存在此任务,请完成后或删除后再次添加.")
+        return True
+    else:
+        await message.reply(content=f"\n请提交任务名称.")
+        return True 
 
 @Commands("tasklist")
 async def tasklist(api: BotAPI, message: Message, params=None):
@@ -144,13 +148,9 @@ async def tasklist(api: BotAPI, message: Message, params=None):
 @Commands("clear")
 async def clears(api: BotAPI, message: Message, params=None):
     msg = message
-    raw_message = msg.content.strip().split("/clear")[1]
+    raw_message = msg.content.strip().split()
+    _, task = [i for i in raw_message if i != ""] 
 
-    try:
-        _, task = raw_message.split(" ")
-    except ValueError:
-        await message.reply(content=f"\n未成功 任务名错误")
-        return True
     with open("task.json", "r") as fp:
         task_dict = loads(fp.read())
         task_list = list(task_dict.keys())
@@ -193,13 +193,9 @@ async def helps(api: BotAPI, message: Message, params=None):
 @Commands("pack")
 async def pack(api: BotAPI, message: Message, params=None):
     msg = message
-    raw_message = msg.content.strip().split("/pack")[1]
+    raw_message = msg.content.strip().split()
+    _, task = [i for i in raw_message if i != ""] 
 
-    try:
-        _, task = raw_message.split(" ")
-    except ValueError:
-        await message.reply(content=f"\n未成功 任务名错误")
-        return True
     with open("task.json", "r") as fp:
         task_dict = loads(fp.read())
         task_list = list(task_dict.keys())
@@ -209,23 +205,22 @@ async def pack(api: BotAPI, message: Message, params=None):
     except ValueError:
         pass
     if task:
+        print(classroom)
+        process_images_in_directory(f"db/{task}", classroom)
         create_zip_from_folder(f"db/{task}/", f"db/zip/{classroom}-{task}.zip")
-        await message.reply(content=f"已打包 {task} 任务.\n 请使用专用下载器下载.") 
+        await message.reply(content=f"\n已打包 {task} 任务.\n 请使用专用下载器下载.") 
     else:
-        await message.reply(content=f"\n 没有该任务")
+        await message.reply(content=f"\n没有该任务")
     return True
 
 @Commands("submit")
 async def sub(api: BotAPI, message: Message, params=None):
     # 如果使用 self.api 则会无法判断是群还是私聊
     msg = message
-    name = msg.content.strip().split("sub")[1].strip()
-    raw_message = msg.content.strip().split("/submit")[1]
-    try:
-        _, task, name = raw_message.split(" ")
-    except ValueError:
-        await message.reply(content=f"\n提交时间:\n{str(datetime.now()).split('.')[0]}\n未成功 名称或任务名错误")
-        return True
+    raw_message = msg.content.strip().split()
+
+    _, task, name  = [i for i in raw_message if i != ""] 
+
     with open("task.json", "r") as fp:
         task_dict = loads(fp.read())
         task_list = list(task_dict.keys())
@@ -296,7 +291,7 @@ class MyClient(botpy.Client):
         await message.reply(content=f"机器人{self.robot.name}收到你的@消息了: {message.content} [CQ:at,qq=2759372655]")
 
 if __name__ == "__main__":
-    with open("task.json", "r") as fp:
+    with open("task.json", "r", encoding="utf-8") as fp:
         task_dict = loads(fp.read())
         task_list = list(task_dict.keys())
     for i in task_list:
