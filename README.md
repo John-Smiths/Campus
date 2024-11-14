@@ -1,10 +1,14 @@
 # QQBot-Class
 该机器人用于收集各种信息例如截图
 
+# 例子
+![示例1](photo_2024-11-14_14-56-59.jpg)
+![示例2](photo_2024-11-14_14-57-29.jpg)
+
 # 准备工作
 ## 安装 qq-bot
 ```bash
-pip install qq-botpy
+pip 安装 qq-botpy
 ```
 ## 修改班级名称和班级成员
 name 文件夹下新建一个txt文件 例: 导弹维修2408.txt  
